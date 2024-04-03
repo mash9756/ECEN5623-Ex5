@@ -33,11 +33,11 @@
 #define PRIORITY_SEQ   (0)
 
 #define PRIORITY_S1    (1)
-#define PRIORITY_S2    (2)
-#define PRIORITY_S3    (3)
-#define PRIORITY_S4    (2)
-#define PRIORITY_S5    (3)
-#define PRIORITY_S6    (2)
-#define PRIORITY_S7    (4)
+#define PRIORITY_S2    (1)
+#define PRIORITY_S3    (1)
+#define PRIORITY_S4    (1)
+#define PRIORITY_S5    (1)
+#define PRIORITY_S6    (1)
+#define PRIORITY_S7    (1)
 
 #endif // __PRIORITIES_H__

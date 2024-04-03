@@ -1,20 +1,17 @@
 /**
+ *  @name   services.c
+ *  @brief  S1 - S7 service definitions
  * 
- * 
- * 
+ *  @author Mark Sherman
 */
 
 #include "services.h"
 
-// xQueueHandle g_pS1Queue;
-// xQueueHandle g_pS2Queue;
-// xQueueHandle g_pS3Queue;
-// xQueueHandle g_pS4Queue;
-// xQueueHandle g_pS5Queue;
-// xQueueHandle g_pS6Queue;
-// xQueueHandle g_pS7Queue;
-
-xSemaphoreHandle g_pUARTSemaphore;
+extern xSemaphoreHandle g_pUARTSemaphore;
+extern xSemaphoreHandle g_pSx[NUM_OF_SERVICES];
+extern bool abortSx[NUM_OF_SERVICES];
+extern bool releaseSx[NUM_OF_SERVICES];
+extern uint32_t SxCnt[NUM_OF_SERVICES];
 
 static void Service1(void *pvParameters) {
     portTickType start;
@@ -22,7 +19,7 @@ static void Service1(void *pvParameters) {
     //portTickType message;
 
     while(!abortSx[S1]) {
-        xSemaphoreTake(g_pSxSema[S1], portMAX_DELAY);
+        xSemaphoreTake(g_pSx[S1], portMAX_DELAY);
 
         // if(xQueueReceive(g_pS1Queue, &message, 0) != pdPASS) {
         //     xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
@@ -40,7 +37,7 @@ static void Service1(void *pvParameters) {
 
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
         UARTprintf("\nS1 completed in %dms | ", (stop - start));
-        UARTprintf("Total Time: %dms\n",  stop);
+        UARTprintf("Total Time: %dms",  stop);
         xSemaphoreGive(g_pUARTSemaphore);
     }
 }
@@ -51,7 +48,7 @@ static void Service2(void *pvParameters) {
     //portTickType message;
 
     while(!abortSx[S2]) {
-        xSemaphoreTake(g_pSxSema[S2], portMAX_DELAY);
+        xSemaphoreTake(g_pSx[S2], portMAX_DELAY);
 
         // if(xQueueReceive(g_pS2Queue, &message, 0) != pdPASS) {
         //     xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
@@ -69,7 +66,7 @@ static void Service2(void *pvParameters) {
 
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
         UARTprintf("\nS2 completed in %dms | ", (stop - start));
-        UARTprintf("Total Time: %dms\n",  stop);
+        UARTprintf("Total Time: %dms",  stop);
         xSemaphoreGive(g_pUARTSemaphore);
     }
 }
@@ -80,7 +77,7 @@ static void Service3(void *pvParameters) {
     //portTickType message;
 
     while(!abortSx[S3]) {
-        xSemaphoreTake(g_pSxSema[S3], portMAX_DELAY);
+        xSemaphoreTake(g_pSx[S3], portMAX_DELAY);
 
         // if(xQueueReceive(g_pS3Queue, &message, 0) != pdPASS) {
         //     xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
@@ -98,7 +95,7 @@ static void Service3(void *pvParameters) {
 
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
         UARTprintf("\nS3 completed in %dms | ", (stop - start));
-        UARTprintf("Total Time: %dms\n",  stop);
+        UARTprintf("Total Time: %dms",  stop);
         xSemaphoreGive(g_pUARTSemaphore);
     }
 }
@@ -109,7 +106,7 @@ static void Service4(void *pvParameters) {
     //portTickType message;
 
     while(!abortSx[S4]) {
-        xSemaphoreTake(g_pSxSema[S4], portMAX_DELAY);
+        xSemaphoreTake(g_pSx[S4], portMAX_DELAY);
 
         // if(xQueueReceive(g_pS4Queue, &message, 0) != pdPASS) {
         //     xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
@@ -127,7 +124,7 @@ static void Service4(void *pvParameters) {
 
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
         UARTprintf("\nS4 completed in %dms | ", (stop - start));
-        UARTprintf("Total Time: %dms\n",  stop);
+        UARTprintf("Total Time: %dms",  stop);
         xSemaphoreGive(g_pUARTSemaphore);
     }
 }
@@ -138,7 +135,7 @@ static void Service5(void *pvParameters) {
     //portTickType message;
 
     while(!abortSx[S5]) {
-        xSemaphoreTake(g_pSxSema[S5], portMAX_DELAY);
+        xSemaphoreTake(g_pSx[S5], portMAX_DELAY);
 
         // if(xQueueReceive(g_pS5Queue, &message, 0) != pdPASS) {
         //     xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
@@ -156,7 +153,7 @@ static void Service5(void *pvParameters) {
 
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
         UARTprintf("\nS5 completed in %dms | ", (stop - start));
-        UARTprintf("Total Time: %dms\n",  stop);
+        UARTprintf("Total Time: %dms",  stop);
         xSemaphoreGive(g_pUARTSemaphore);
     }
 }
@@ -167,7 +164,7 @@ static void Service6(void *pvParameters) {
     //portTickType message;
 
     while(!abortSx[S6]) {
-        xSemaphoreTake(g_pSxSema[S6], portMAX_DELAY);
+        xSemaphoreTake(g_pSx[S6], portMAX_DELAY);
 
         // if(xQueueReceive(g_pS6Queue, &message, 0) != pdPASS) {
         //     xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
@@ -185,7 +182,7 @@ static void Service6(void *pvParameters) {
 
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
         UARTprintf("\nS6 completed in %dms | ", (stop - start));
-        UARTprintf("Total Time: %dms\n",  stop);
+        UARTprintf("Total Time: %dms",  stop);
         xSemaphoreGive(g_pUARTSemaphore);
     }
 }
@@ -196,7 +193,7 @@ static void Service7(void *pvParameters) {
     //portTickType message;
 
     while(!abortSx[S7]) {
-        xSemaphoreTake(g_pSxSema[S7], portMAX_DELAY);
+        xSemaphoreTake(g_pSx[S7], portMAX_DELAY);
 
         // if(xQueueReceive(g_pS7Queue, &message, 0) != pdPASS) {
         //     xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
@@ -214,10 +211,11 @@ static void Service7(void *pvParameters) {
 
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
         UARTprintf("\nS7 completed in %dms | ", (stop - start));
-        UARTprintf("Total Time: %dms\n",  stop);
+        UARTprintf("Total Time: %dms",  stop);
         xSemaphoreGive(g_pUARTSemaphore);
     }
 }
+
 
 uint32_t Service1Init(void) {
     UARTprintf("Starting Service 1...");
