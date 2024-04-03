@@ -9,41 +9,124 @@
 #include "sequencer.h"
 #include "services.h"
 
+
 extern xSemaphoreHandle g_pUARTSemaphore;
 extern xSemaphoreHandle g_pSx[NUM_OF_SERVICES];
 extern bool abortSx[NUM_OF_SERVICES];
 extern bool releaseSx[NUM_OF_SERVICES];
 extern uint32_t SxCnt[NUM_OF_SERVICES];
 
+extern portTickType service1_executionTime[S1_REL_CNT];
+extern portTickType service2_executionTime[S2_REL_CNT];
+extern portTickType service3_executionTime[S3_REL_CNT];
+extern portTickType service4_executionTime[S4_REL_CNT];
+extern portTickType service5_executionTime[S5_REL_CNT];
+extern portTickType service6_executionTime[S6_REL_CNT];
+extern portTickType service7_executionTime[S7_REL_CNT];
+
+portTickType WCET[NUM_OF_SERVICES];
+
+void calcWCET() {
+    uint8_t i = 0;
+    // for (; i < NUM_OF_SERVICES; i++) {
+    //     // switch (i)
+    //     // {
+    //     //     case S1:
+    //     //         rel_cnt = S1_REL_CNT;
+    //     //         break;
+    //     //     case S2:
+    //     //         rel_cnt = S2_REL_CNT;
+    //     //         break;
+    //     //     case S3:
+    //     //         rel_cnt = S3_REL_CNT;
+    //     //         break;
+    //     //     case S4:
+    //     //         rel_cnt = S4_REL_CNT;
+    //     //         break;
+    //     //     case S5:
+    //     //         rel_cnt = S5_REL_CNT;
+    //     //         break;
+    //     //     case S6:
+    //     //         rel_cnt = S6_REL_CNT;
+    //     //         break;
+    //     //     case S7:
+    //     //         rel_cnt = S7_REL_CNT;
+    //     //         break;
+    //     //     default:
+    //     //         return;
+    //     //         break;
+    //     // }  
+    // }
+    
+    for (; i < S1_REL_CNT; i++) {
+        if(WCET[S1] < service1_executionTime[i]){
+            WCET[S1] = service1_executionTime[i];
+        }
+    }
+    for (i = 0; i < S2_REL_CNT; i++) {
+        if(WCET[S2] < service2_executionTime[i]){
+            WCET[S2] = service2_executionTime[i];
+        }
+    }
+    for (i = 0; i < S3_REL_CNT; i++) {
+        if(WCET[S3] < service3_executionTime[i]){
+            WCET[S3] = service3_executionTime[i];
+        }
+    }
+    for (i = 0; i < S4_REL_CNT; i++) {
+        if(WCET[S4] < service4_executionTime[i]){
+            WCET[S4] = service4_executionTime[i];
+        }
+    }
+    for (i = 0; i < S5_REL_CNT; i++) {
+        if(WCET[S5] < service5_executionTime[i]){
+            WCET[S5] = service5_executionTime[i];
+        }
+    }
+    for (i = 0; i < S6_REL_CNT; i++) {
+        if(WCET[S6] < service6_executionTime[i]){
+            WCET[S6] = service6_executionTime[i];
+        }
+    }
+    for (i = 0; i < S7_REL_CNT; i++) {
+        if(WCET[S7] < service7_executionTime[i]){
+            WCET[S7] = service7_executionTime[i];
+        }
+    }    
+}
+
 static void Sequencer(void *threadp)
 {
-    uint8_t i = S1;    
+    uint8_t i = S1;
+    xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
+    UARTprintf("Execution Status:\n");
+    xSemaphoreGive(g_pUARTSemaphore);    
+
     while(!abortSx[SEQ]) {
         xSemaphoreTake(g_pSx[SEQ], portMAX_DELAY);
-
-        xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        UARTprintf("\nSequencer Release Received from ISR!");
-        xSemaphoreGive(g_pUARTSemaphore);
+        
+        if(SxCnt[SEQ] % 30){
+            xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
+            UARTprintf("-");
+            xSemaphoreGive(g_pUARTSemaphore);
+        }
 
         for(; i < NUM_OF_SERVICES; i++) {
             if(releaseSx[i]) {
-                xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-                UARTprintf("\nS%d Release Received from ISR!", i);
-                xSemaphoreGive(g_pUARTSemaphore);
                 xSemaphoreGive(g_pSx[i]);
                 releaseSx[i] = false;
             }
         }
         i = S1;
         SxCnt[SEQ]++;
-        if (SxCnt[SEQ] >= 1000) {
+        if (SxCnt[SEQ] >= SEQ_REL_CNT) {
             abortSx[SEQ] = true;
         }
     }
-
+    calcWCET();
     for (i = 0; i < NUM_OF_SERVICES; i++) {
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        UARTprintf("\nS%d Release Count: %d",i , SxCnt[i]);
+        UARTprintf("\nS%d Release Count: %d | WCET: %dms",i , SxCnt[i], WCET[i]);
         xSemaphoreGive(g_pUARTSemaphore);
     }
 }
@@ -56,6 +139,10 @@ uint32_t SequencerInit(void) {
     SxCnt[SEQ]      = 0;
     g_pSx[SEQ]      = xSemaphoreCreateMutex();
     xSemaphoreTake(g_pSx[SEQ], portMAX_DELAY);
+    uint8_t i = 0;
+    for (i = 0; i < NUM_OF_SERVICES; i++) {
+        WCET[i] = 0;
+    }
 
     if(xTaskCreate(Sequencer, (signed portCHAR *)"Sequencer",
                    SERVICE_STACK_SIZE, NULL, tskIDLE_PRIORITY +

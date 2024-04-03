@@ -6,6 +6,7 @@
 */
 
 #include "services.h"
+#include "fib.h"
 
 extern xSemaphoreHandle g_pUARTSemaphore;
 extern xSemaphoreHandle g_pSx[NUM_OF_SERVICES];
@@ -13,209 +14,130 @@ extern bool abortSx[NUM_OF_SERVICES];
 extern bool releaseSx[NUM_OF_SERVICES];
 extern uint32_t SxCnt[NUM_OF_SERVICES];
 
+portTickType service1_executionTime[S1_REL_CNT];
+portTickType service2_executionTime[S2_REL_CNT];
+portTickType service3_executionTime[S3_REL_CNT];
+portTickType service4_executionTime[S4_REL_CNT];
+portTickType service5_executionTime[S5_REL_CNT];
+portTickType service6_executionTime[S6_REL_CNT];
+portTickType service7_executionTime[S7_REL_CNT];
+
+// xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
+// UARTprintf("\nS1 completed in %dms | ", (stop - start));
+// UARTprintf("Total Time: %dms",  stop);
+// xSemaphoreGive(g_pUARTSemaphore);
+
 static void Service1(void *pvParameters) {
     portTickType start;
     portTickType stop;
-    //portTickType message;
 
     while(!abortSx[S1]) {
         xSemaphoreTake(g_pSx[S1], portMAX_DELAY);
 
-        // if(xQueueReceive(g_pS1Queue, &message, 0) != pdPASS) {
-        //     xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        //     UARTprintf("\nS1 ISR Message Error\n");
-        //     xSemaphoreGive(g_pUARTSemaphore);
-        // }
-        //
-        // xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        // UARTprintf("\nS1 Released, ISR time: %d", message);
-        // xSemaphoreGive(g_pUARTSemaphore);
-
         start = xTaskGetTickCount();
-        SxCnt[S1]++;
+        fib_test(FIB10MS_ITERATIONS);   
         stop = xTaskGetTickCount();
 
-        xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        UARTprintf("\nS1 completed in %dms | ", (stop - start));
-        UARTprintf("Total Time: %dms",  stop);
-        xSemaphoreGive(g_pUARTSemaphore);
+        service1_executionTime[SxCnt[S1]] = stop - start;
+        SxCnt[S1]++;
     }
 }
 
 static void Service2(void *pvParameters) {
     portTickType start;
     portTickType stop;
-    //portTickType message;
 
     while(!abortSx[S2]) {
         xSemaphoreTake(g_pSx[S2], portMAX_DELAY);
 
-        // if(xQueueReceive(g_pS2Queue, &message, 0) != pdPASS) {
-        //     xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        //     UARTprintf("\nS2 ISR Message Error\n");
-        //     xSemaphoreGive(g_pUARTSemaphore);
-        // }
-        //
-        // xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        // UARTprintf("\nS2 Released, ISR time: %d", message);
-        // xSemaphoreGive(g_pUARTSemaphore);
-
         start = xTaskGetTickCount();
-        SxCnt[S2]++;
+        fib_test(FIB10MS_ITERATIONS);
         stop = xTaskGetTickCount();
 
-        xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        UARTprintf("\nS2 completed in %dms | ", (stop - start));
-        UARTprintf("Total Time: %dms",  stop);
-        xSemaphoreGive(g_pUARTSemaphore);
+        service2_executionTime[SxCnt[S2]] = stop - start;
+        SxCnt[S2]++;
     }
 }
 
 static void Service3(void *pvParameters) {
     portTickType start;
     portTickType stop;
-    //portTickType message;
 
     while(!abortSx[S3]) {
         xSemaphoreTake(g_pSx[S3], portMAX_DELAY);
 
-        // if(xQueueReceive(g_pS3Queue, &message, 0) != pdPASS) {
-        //     xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        //     UARTprintf("\nS3 ISR Message Error\n");
-        //     xSemaphoreGive(g_pUARTSemaphore);
-        // }
-        //
-        // xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        // UARTprintf("\nS3 Released, ISR time: %d", message);
-        // xSemaphoreGive(g_pUARTSemaphore);
-
         start = xTaskGetTickCount();
-        SxCnt[S3]++;
+        fib_test(FIB10MS_ITERATIONS);
         stop = xTaskGetTickCount();
 
-        xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        UARTprintf("\nS3 completed in %dms | ", (stop - start));
-        UARTprintf("Total Time: %dms",  stop);
-        xSemaphoreGive(g_pUARTSemaphore);
+        service3_executionTime[SxCnt[S3]] = stop - start;
+        SxCnt[S3]++;
     }
 }
 
 static void Service4(void *pvParameters) {
     portTickType start;
     portTickType stop;
-    //portTickType message;
 
     while(!abortSx[S4]) {
         xSemaphoreTake(g_pSx[S4], portMAX_DELAY);
 
-        // if(xQueueReceive(g_pS4Queue, &message, 0) != pdPASS) {
-        //     xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        //     UARTprintf("\nS4 ISR Message Error\n");
-        //     xSemaphoreGive(g_pUARTSemaphore);
-        // }
-        //
-        // xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        // UARTprintf("\nS4 Released, ISR time: %d", message);
-        // xSemaphoreGive(g_pUARTSemaphore);
-
         start = xTaskGetTickCount();
-        SxCnt[S4]++;
+        fib_test(FIB10MS_ITERATIONS);
         stop = xTaskGetTickCount();
 
-        xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        UARTprintf("\nS4 completed in %dms | ", (stop - start));
-        UARTprintf("Total Time: %dms",  stop);
-        xSemaphoreGive(g_pUARTSemaphore);
+        service4_executionTime[SxCnt[S4]] = stop - start;
+        SxCnt[S4]++;
     }
 }
 
 static void Service5(void *pvParameters) {
     portTickType start;
     portTickType stop;
-    //portTickType message;
 
     while(!abortSx[S5]) {
         xSemaphoreTake(g_pSx[S5], portMAX_DELAY);
 
-        // if(xQueueReceive(g_pS5Queue, &message, 0) != pdPASS) {
-        //     xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        //     UARTprintf("\nS5 ISR Message Error\n");
-        //     xSemaphoreGive(g_pUARTSemaphore);
-        // }
-        //
-        // xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        // UARTprintf("\nS5 Released, ISR time: %d", message);
-        // xSemaphoreGive(g_pUARTSemaphore);
-
         start = xTaskGetTickCount();
-        SxCnt[S5]++;
+        fib_test(FIB10MS_ITERATIONS);
         stop = xTaskGetTickCount();
 
-        xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        UARTprintf("\nS5 completed in %dms | ", (stop - start));
-        UARTprintf("Total Time: %dms",  stop);
-        xSemaphoreGive(g_pUARTSemaphore);
+        service5_executionTime[SxCnt[S5]] = stop - start;
+        SxCnt[S5]++;
     }
 }
 
 static void Service6(void *pvParameters) {
     portTickType start;
     portTickType stop;
-    //portTickType message;
 
     while(!abortSx[S6]) {
         xSemaphoreTake(g_pSx[S6], portMAX_DELAY);
 
-        // if(xQueueReceive(g_pS6Queue, &message, 0) != pdPASS) {
-        //     xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        //     UARTprintf("\nS6 ISR Message Error\n");
-        //     xSemaphoreGive(g_pUARTSemaphore);
-        // }
-        //
-        // xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        // UARTprintf("\nS6 Released, ISR time: %d", message);
-        // xSemaphoreGive(g_pUARTSemaphore);
-
         start = xTaskGetTickCount();
-        SxCnt[S6]++;
+        fib_test(FIB10MS_ITERATIONS);
         stop = xTaskGetTickCount();
 
-        xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        UARTprintf("\nS6 completed in %dms | ", (stop - start));
-        UARTprintf("Total Time: %dms",  stop);
-        xSemaphoreGive(g_pUARTSemaphore);
+        service6_executionTime[SxCnt[S6]] = stop - start;
+        SxCnt[S6]++;
     }
 }
 
 static void Service7(void *pvParameters) {
     portTickType start;
     portTickType stop;
-    //portTickType message;
 
     while(!abortSx[S7]) {
         xSemaphoreTake(g_pSx[S7], portMAX_DELAY);
 
-        // if(xQueueReceive(g_pS7Queue, &message, 0) != pdPASS) {
-        //     xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        //     UARTprintf("\nS7 ISR Message Error\n");
-        //     xSemaphoreGive(g_pUARTSemaphore);
-        // }
-        //
-        // xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        // UARTprintf("\nS7 Released, ISR time: %d", message);
-        // xSemaphoreGive(g_pUARTSemaphore);
-
         start = xTaskGetTickCount();
-        SxCnt[S7]++;
+        fib_test(FIB10MS_ITERATIONS);
         stop = xTaskGetTickCount();
 
-        xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        UARTprintf("\nS7 completed in %dms | ", (stop - start));
-        UARTprintf("Total Time: %dms",  stop);
-        xSemaphoreGive(g_pUARTSemaphore);
+        service7_executionTime[SxCnt[S7]] = stop - start;
+        SxCnt[S7]++;
     }
 }
-
 
 uint32_t Service1Init(void) {
     UARTprintf("Starting Service 1...");
