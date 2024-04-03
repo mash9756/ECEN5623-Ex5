@@ -70,31 +70,21 @@ void vApplicationStackOverflowHook(xTaskHandle *pxTask, char *pcTaskName) {
  *  @brief  setup hardware UART0 peripheral
 */
 void ConfigureUART0(void) {
-    //
     // Enable the GPIO Peripheral used by the UART.
-    //
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
 
-    //
     // Enable UART0
-    //
     ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
 
-    //
     // Configure GPIO Pins for UART mode.
-    //
     ROM_GPIOPinConfigure(GPIO_PA0_U0RX);
     ROM_GPIOPinConfigure(GPIO_PA1_U0TX);
     ROM_GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 
-    //
     // Use the internal 16MHz oscillator as the UART clock source.
-    //
     UARTClockSourceSet(UART0_BASE, UART_CLOCK_PIOSC);
 
-    //
     // Initialize the UART for console I/O.
-    //
     UARTStdioConfig(0, 115200, 16000000);
 }
 
@@ -139,6 +129,7 @@ void Timer0IntHandler(void) {
     ROM_TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
     ui8IntCnt++;
 
+/* set release flag for each service as needed */
     if(ui8IntCnt % 10 == 0) {
         releaseSx[S1] = true;
     }
@@ -155,24 +146,10 @@ void Timer0IntHandler(void) {
         releaseSx[S7] = true;
         ui8IntCnt = 0;
     }
-    
+/* run the sequencer */
     xSemaphoreGiveFromISR(g_pSx[SEQ], NULL);
-
-    // portTickType message;
-    // message = xTaskGetTickCount();
-    // if(xQueueSend(g_pComp1Queue, &message, portMAX_DELAY) != pdPASS) {
-    // /* Queue should never be full. If so print the error message on UART and wait for ever. */
-    //     UARTprintf("\nQueue full. This should never happen.\n");
-    // }
-    // xSemaphoreGiveFromISR(g_pTimer0Semaphore, NULL);
 }
 
-
-//*****************************************************************************
-//
-// Initialize FreeRTOS and start the initial set of tasks.
-//
-//*****************************************************************************
 int main(void)
 {
     uint8_t i   = S1;
@@ -210,6 +187,7 @@ int main(void)
         return -1;
     }
 
+/* create each service */
     ret = Service1Init();
     if(ret)
     {
@@ -259,13 +237,13 @@ int main(void)
        return -1;
    }
 
-    // Enable the timers.
+/* enable (start) the configured timer */
     ROM_TimerEnable(TIMER0_BASE, TIMER_A);
 
-    // Start the scheduler.  This should not return.
+/* start FreeRTOS scheduler, should never return */
     vTaskStartScheduler();
 
     while(1){
-    // In case the scheduler returns for some reason, loop
+        /* loop forever on scheduler return for debugging */
     }
 }

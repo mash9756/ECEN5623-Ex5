@@ -1,5 +1,4 @@
 /**
- * 
  *  @name   sequencer.c
  *  @brief  service sequencer definition
  * 
@@ -9,13 +8,13 @@
 #include "sequencer.h"
 #include "services.h"
 
-
 extern xSemaphoreHandle g_pUARTSemaphore;
 extern xSemaphoreHandle g_pSx[NUM_OF_SERVICES];
 extern bool abortSx[NUM_OF_SERVICES];
 extern bool releaseSx[NUM_OF_SERVICES];
 extern uint32_t SxCnt[NUM_OF_SERVICES];
 
+/* not super clean but didn't want to waste too much time making this prettier */
 extern portTickType service1_executionTime[S1_REL_CNT];
 extern portTickType service2_executionTime[S2_REL_CNT];
 extern portTickType service3_executionTime[S3_REL_CNT];
@@ -26,37 +25,9 @@ extern portTickType service7_executionTime[S7_REL_CNT];
 
 portTickType WCET[NUM_OF_SERVICES];
 
+/* not super clean but didn't want to waste too much time making this prettier */
 void calcWCET() {
     uint8_t i = 0;
-    // for (; i < NUM_OF_SERVICES; i++) {
-    //     // switch (i)
-    //     // {
-    //     //     case S1:
-    //     //         rel_cnt = S1_REL_CNT;
-    //     //         break;
-    //     //     case S2:
-    //     //         rel_cnt = S2_REL_CNT;
-    //     //         break;
-    //     //     case S3:
-    //     //         rel_cnt = S3_REL_CNT;
-    //     //         break;
-    //     //     case S4:
-    //     //         rel_cnt = S4_REL_CNT;
-    //     //         break;
-    //     //     case S5:
-    //     //         rel_cnt = S5_REL_CNT;
-    //     //         break;
-    //     //     case S6:
-    //     //         rel_cnt = S6_REL_CNT;
-    //     //         break;
-    //     //     case S7:
-    //     //         rel_cnt = S7_REL_CNT;
-    //     //         break;
-    //     //     default:
-    //     //         return;
-    //     //         break;
-    //     // }  
-    // }
     
     for (; i < S1_REL_CNT; i++) {
         if(WCET[S1] < service1_executionTime[i]){
@@ -134,11 +105,14 @@ static void Sequencer(void *threadp)
 uint32_t SequencerInit(void) {
     UARTprintf("Starting Sequencer...");
 
+/* init sequencer variables */
     abortSx[SEQ]    = false;
     releaseSx[SEQ]  = false;
     SxCnt[SEQ]      = 0;
     g_pSx[SEQ]      = xSemaphoreCreateMutex();
     xSemaphoreTake(g_pSx[SEQ], portMAX_DELAY);
+
+/* init WCETs */
     uint8_t i = 0;
     for (i = 0; i < NUM_OF_SERVICES; i++) {
         WCET[i] = 0;

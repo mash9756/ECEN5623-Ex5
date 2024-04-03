@@ -14,6 +14,7 @@ extern bool abortSx[NUM_OF_SERVICES];
 extern bool releaseSx[NUM_OF_SERVICES];
 extern uint32_t SxCnt[NUM_OF_SERVICES];
 
+/* not super clean but didn't want to waste too much time making this prettier */
 portTickType service1_executionTime[S1_REL_CNT];
 portTickType service2_executionTime[S2_REL_CNT];
 portTickType service3_executionTime[S3_REL_CNT];
@@ -21,11 +22,6 @@ portTickType service4_executionTime[S4_REL_CNT];
 portTickType service5_executionTime[S5_REL_CNT];
 portTickType service6_executionTime[S6_REL_CNT];
 portTickType service7_executionTime[S7_REL_CNT];
-
-// xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-// UARTprintf("\nS1 completed in %dms | ", (stop - start));
-// UARTprintf("Total Time: %dms",  stop);
-// xSemaphoreGive(g_pUARTSemaphore);
 
 static void Service1(void *pvParameters) {
     portTickType start;
@@ -141,7 +137,6 @@ static void Service7(void *pvParameters) {
 
 uint32_t Service1Init(void) {
     UARTprintf("Starting Service 1...");
-    //g_pS1Queue = xQueueCreate(QUEUE_SIZE, QUEUE_ITEM_SIZE);
 
     if(xTaskCreate(Service1, (signed portCHAR *)"S1",
                    SERVICE_STACK_SIZE, NULL, tskIDLE_PRIORITY +
@@ -156,7 +151,6 @@ uint32_t Service1Init(void) {
 
 uint32_t Service2Init(void) {
     UARTprintf("Starting Service 2...");
-    //g_pS2Queue = xQueueCreate(QUEUE_SIZE, QUEUE_ITEM_SIZE);
 
     if(xTaskCreate(Service2, (signed portCHAR *)"S2",
                    SERVICE_STACK_SIZE, NULL, tskIDLE_PRIORITY +
@@ -171,7 +165,6 @@ uint32_t Service2Init(void) {
 
 uint32_t Service3Init(void) {
     UARTprintf("Starting Service 3...");
-    //g_pS3Queue = xQueueCreate(QUEUE_SIZE, QUEUE_ITEM_SIZE);
 
     if(xTaskCreate(Service3, (signed portCHAR *)"S3",
                    SERVICE_STACK_SIZE, NULL, tskIDLE_PRIORITY +
@@ -186,7 +179,6 @@ uint32_t Service3Init(void) {
 
 uint32_t Service4Init(void) {
     UARTprintf("Starting Service 4...");
-    //g_pS4Queue = xQueueCreate(QUEUE_SIZE, QUEUE_ITEM_SIZE);
 
     if(xTaskCreate(Service4, (signed portCHAR *)"S4",
                    SERVICE_STACK_SIZE, NULL, tskIDLE_PRIORITY +
@@ -201,7 +193,6 @@ uint32_t Service4Init(void) {
 
 uint32_t Service5Init(void) {
     UARTprintf("Starting Service 5...");
-    //g_pS5Queue = xQueueCreate(QUEUE_SIZE, QUEUE_ITEM_SIZE);
 
     if(xTaskCreate(Service5, (signed portCHAR *)"S5",
                    SERVICE_STACK_SIZE, NULL, tskIDLE_PRIORITY +
@@ -216,7 +207,6 @@ uint32_t Service5Init(void) {
 
 uint32_t Service6Init(void) {
     UARTprintf("Starting Service 6...");
-    //g_pS6Queue = xQueueCreate(QUEUE_SIZE, QUEUE_ITEM_SIZE);
 
     if(xTaskCreate(Service6, (signed portCHAR *)"S6",
                    SERVICE_STACK_SIZE, NULL, tskIDLE_PRIORITY +
@@ -231,7 +221,6 @@ uint32_t Service6Init(void) {
 
 uint32_t Service7Init(void) {
     UARTprintf("Starting Service 7...");
-    //g_pS7Queue = xQueueCreate(QUEUE_SIZE, QUEUE_ITEM_SIZE);
 
     if(xTaskCreate(Service7, (signed portCHAR *)"S7",
                    SERVICE_STACK_SIZE, NULL, tskIDLE_PRIORITY +
