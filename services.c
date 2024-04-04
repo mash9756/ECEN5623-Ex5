@@ -108,7 +108,7 @@ static void vServFunc(void *pvParameters) {
         xSemaphoreTake(services[servID].sem, portMAX_DELAY);
 
         start = xTaskGetTickCount();
-        fib_test(FIB10MS_ITERATIONS);   
+        fib_test(FIB_ITERATIONS);   
         stop = xTaskGetTickCount();
 
         services[servID].exTimes[services[servID].rel_cnt] = stop - start;

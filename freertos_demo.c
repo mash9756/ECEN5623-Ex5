@@ -32,8 +32,10 @@
 #define SYS_CLK         (50000000)
 /* 30Hz timer has a period of ~33ms (1 / 30 = .033s) */
 #define TIMER_30HZ      (SYS_CLK / 1000 * 33)
-/* 3000Hz timer has a period of ~333us (1 / 3000 = .000333s) */
-#define TIMER_3000HZ    (SYS_CLK / 1000000 * 33)
+/* 3000Hz timer has a period of ~3.3ms (1 / 300 = .0033s) */
+#define TIMER_300HZ     (SYS_CLK / 10000 * 33)
+/* 3000Hz timer has a period of ~330us (1 / 3000 = .00033s) */
+#define TIMER_3000HZ    (SYS_CLK / 100000 * 33)
 
 static uint8_t ui8IntCnt = 0;
 
@@ -109,7 +111,6 @@ void Timer0IntHandler(void) {
 /* Clear Timer0 interrupt immediately to prevent repeated triggering */
     ROM_TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
     ui8IntCnt++;
-
 
     Services_t *servs = xGetServices();
 

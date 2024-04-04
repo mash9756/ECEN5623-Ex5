@@ -40,7 +40,7 @@ static void vSequencer(void *threadp)
     while(!services[SEQ].abort) {
         xSemaphoreTake(services[SEQ].sem, portMAX_DELAY);
         
-        if(services[SEQ].rel_cnt % 30 == 0){
+        if(services[SEQ].rel_cnt % 10 == 0){
             xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
             UARTprintf("-");
             xSemaphoreGive(g_pUARTSemaphore);
@@ -55,6 +55,7 @@ static void vSequencer(void *threadp)
         
         services[SEQ].rel_cnt++;
         if (services[SEQ].rel_cnt >= SEQ_REL_CNT) {
+            ROM_IntDisable(INT_TIMER0A);
             for (i = SEQ; i < NUM_OF_SERVICES; i++) {
                 services[i].abort = true;
             }
@@ -64,7 +65,7 @@ static void vSequencer(void *threadp)
     calcWCET();
     for (i = S1; i < NUM_OF_SERVICES; i++) {
         xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        UARTprintf("\nS%d WCET: %dms | minET: %dms", i, services[i].WCET, services[i].minET);
+        UARTprintf("\nS%d Release Count: %d| WCET: %dms | minET: %dms", i, services[i].rel_cnt, services[i].WCET, services[i].minET);
         xSemaphoreGive(g_pUARTSemaphore);
     }
 

@@ -30,14 +30,14 @@
 // The priorities of the various tasks.
 //
 //*****************************************************************************
-#define PRIORITY_SEQ   (4)
+#define PRIORITY_SEQ   (configMAX_PRIORITIES)
 
-#define PRIORITY_S1    (3)
-#define PRIORITY_S2    (2)
-#define PRIORITY_S3    (1)
-#define PRIORITY_S4    (2)
-#define PRIORITY_S5    (1)
-#define PRIORITY_S6    (2)
-#define PRIORITY_S7    (0)
+#define PRIORITY_S1    (4)
+#define PRIORITY_S2    (3)
+#define PRIORITY_S3    (2)
+#define PRIORITY_S4    (3)
+#define PRIORITY_S5    (2)
+#define PRIORITY_S6    (3)
+#define PRIORITY_S7    (1)
 
 #endif // __PRIORITIES_H__

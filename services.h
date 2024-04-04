@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include "inc/hw_memmap.h"
 #include "inc/hw_types.h"
+#include "inc/hw_ints.h"
 #include "driverlib/gpio.h"
 #include "driverlib/rom.h"
 #include "utils/uartstdio.h"
