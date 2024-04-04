@@ -7,14 +7,60 @@
 
 #include "services.h"
 #include "fib.h"
+#include "stdio.h"
 
-extern xSemaphoreHandle g_pUARTSemaphore;
-extern xSemaphoreHandle g_pSx[NUM_OF_SERVICES];
-extern bool abortSx[NUM_OF_SERVICES];
-extern bool releaseSx[NUM_OF_SERVICES];
-extern uint32_t SxCnt[NUM_OF_SERVICES];
+/* global static instance of array of all services */
+static Services_t services[NUM_OF_SERVICES];
 
-/* not super clean but didn't want to waste too much time making this prettier */
+/* array of priorities for service creation */
+const uint32_t SERVICE_PRIORITIES[NUM_OF_SERVICES] = {
+    PRIORITY_SEQ,
+    PRIORITY_S1,
+    PRIORITY_S2,
+    PRIORITY_S3,
+    PRIORITY_S4,
+    PRIORITY_S5,
+    PRIORITY_S6,
+    PRIORITY_S7
+};
+
+const uint32_t EXPECTED_RELEASE_COUNTS[NUM_OF_SERVICES] = {
+    SEQ_REL_CNT,
+    S1_REL_CNT,
+    S2_REL_CNT,
+    S3_REL_CNT,
+    S4_REL_CNT,
+    S5_REL_CNT,
+    S6_REL_CNT,
+    S7_REL_CNT
+};
+
+/* service name getter for service creation */
+char *cGetServiceName(SNames_t id){
+    switch (id)
+    {
+        case SEQ:
+            return "SEQ";
+        case S1:
+            return "S1";
+        case S2:
+            return "S2";
+        case S3:
+            return "S3";
+        case S4:
+            return "S4";
+        case S5:
+            return "S5";
+        case S6:
+            return "S6";
+        case S7:
+            return "S7";
+        default:
+            return "???";
+    }
+}
+
+/* arrays for each service since they have different release periods */
 portTickType service1_executionTime[S1_REL_CNT];
 portTickType service2_executionTime[S2_REL_CNT];
 portTickType service3_executionTime[S3_REL_CNT];
@@ -23,212 +69,86 @@ portTickType service5_executionTime[S5_REL_CNT];
 portTickType service6_executionTime[S6_REL_CNT];
 portTickType service7_executionTime[S7_REL_CNT];
 
-static void Service1(void *pvParameters) {
+/* array of pointers to ex time arrays for assignment to each service */
+portTickType *xExecutionTimes[NUM_OF_SERVICES] = {
+    NULL,
+    service1_executionTime,
+    service2_executionTime,
+    service3_executionTime,
+    service4_executionTime,
+    service5_executionTime,
+    service6_executionTime,
+    service7_executionTime
+};
+
+/* getter for a reference to static array of services  */
+Services_t *xGetServices() {
+    return services;
+}
+
+/* getter for service prioritiess */
+uint32_t uiGetRelCnt(SNames_t id) {
+    return EXPECTED_RELEASE_COUNTS[(uint32_t)id];
+}
+
+/* getter for service prioritiess */
+uint32_t uiGetPriority(SNames_t id) {
+    return SERVICE_PRIORITIES[(uint32_t)id];
+}
+
+/* service function with synthetic fibonacci load */
+static void vServFunc(void *pvParameters) {
+    uint32_t servID = 0;
+    servID = (uint32_t)pvParameters;
+
     portTickType start;
     portTickType stop;
 
-    while(!abortSx[S1]) {
-        xSemaphoreTake(g_pSx[S1], portMAX_DELAY);
+    while(!services[servID].abort) {
+        xSemaphoreTake(services[servID].sem, portMAX_DELAY);
 
         start = xTaskGetTickCount();
         fib_test(FIB10MS_ITERATIONS);   
         stop = xTaskGetTickCount();
 
-        service1_executionTime[SxCnt[S1]] = stop - start;
-        SxCnt[S1]++;
+        services[servID].exTimes[services[servID].rel_cnt] = stop - start;
+        services[servID].rel_cnt++;
     }
 }
 
-static void Service2(void *pvParameters) {
-    portTickType start;
-    portTickType stop;
+/* initializer for all services */
+uint32_t uiInitServices(void) {
+    uint8_t i   = S1;
+    int ret     = 0;
 
-    while(!abortSx[S2]) {
-        xSemaphoreTake(g_pSx[S2], portMAX_DELAY);
+    for(; i < NUM_OF_SERVICES ; i++) {
+        UARTprintf("Starting Service %d...", i);
 
-        start = xTaskGetTickCount();
-        fib_test(FIB10MS_ITERATIONS);
-        stop = xTaskGetTickCount();
+        services[i].id      = (SNames_t)i;
+        services[i].prio    = uiGetPriority((SNames_t)i);
+        services[i].abort   = false;
+        services[i].release = false;
+        services[i].rel_cnt = 0;
+        services[i].WCET    = 0;
+        services[i].minET   = 0xff;
 
-        service2_executionTime[SxCnt[S2]] = stop - start;
-        SxCnt[S2]++;
+        services[i].exp_rel_cnt = uiGetRelCnt((SNames_t)i);
+        services[i].exTimes = xExecutionTimes[i];
+
+        services[i].sem = xSemaphoreCreateMutex();
+        xSemaphoreTake(services[i].sem, portMAX_DELAY);
+
+        ret = xTaskCreate(  vServFunc, 
+                            (signed portCHAR *)cGetServiceName(services[i].id),
+                            SERVICE_STACK_SIZE, 
+                            (void *)services[i].id, 
+                            tskIDLE_PRIORITY + services[i].prio, 
+                            NULL);
+        if(ret != pdTRUE) {
+            return(1);
+        }
+
+        UARTprintf("Done!\n");
     }
-}
-
-static void Service3(void *pvParameters) {
-    portTickType start;
-    portTickType stop;
-
-    while(!abortSx[S3]) {
-        xSemaphoreTake(g_pSx[S3], portMAX_DELAY);
-
-        start = xTaskGetTickCount();
-        fib_test(FIB10MS_ITERATIONS);
-        stop = xTaskGetTickCount();
-
-        service3_executionTime[SxCnt[S3]] = stop - start;
-        SxCnt[S3]++;
-    }
-}
-
-static void Service4(void *pvParameters) {
-    portTickType start;
-    portTickType stop;
-
-    while(!abortSx[S4]) {
-        xSemaphoreTake(g_pSx[S4], portMAX_DELAY);
-
-        start = xTaskGetTickCount();
-        fib_test(FIB10MS_ITERATIONS);
-        stop = xTaskGetTickCount();
-
-        service4_executionTime[SxCnt[S4]] = stop - start;
-        SxCnt[S4]++;
-    }
-}
-
-static void Service5(void *pvParameters) {
-    portTickType start;
-    portTickType stop;
-
-    while(!abortSx[S5]) {
-        xSemaphoreTake(g_pSx[S5], portMAX_DELAY);
-
-        start = xTaskGetTickCount();
-        fib_test(FIB10MS_ITERATIONS);
-        stop = xTaskGetTickCount();
-
-        service5_executionTime[SxCnt[S5]] = stop - start;
-        SxCnt[S5]++;
-    }
-}
-
-static void Service6(void *pvParameters) {
-    portTickType start;
-    portTickType stop;
-
-    while(!abortSx[S6]) {
-        xSemaphoreTake(g_pSx[S6], portMAX_DELAY);
-
-        start = xTaskGetTickCount();
-        fib_test(FIB10MS_ITERATIONS);
-        stop = xTaskGetTickCount();
-
-        service6_executionTime[SxCnt[S6]] = stop - start;
-        SxCnt[S6]++;
-    }
-}
-
-static void Service7(void *pvParameters) {
-    portTickType start;
-    portTickType stop;
-
-    while(!abortSx[S7]) {
-        xSemaphoreTake(g_pSx[S7], portMAX_DELAY);
-
-        start = xTaskGetTickCount();
-        fib_test(FIB10MS_ITERATIONS);
-        stop = xTaskGetTickCount();
-
-        service7_executionTime[SxCnt[S7]] = stop - start;
-        SxCnt[S7]++;
-    }
-}
-
-uint32_t Service1Init(void) {
-    UARTprintf("Starting Service 1...");
-
-    if(xTaskCreate(Service1, (signed portCHAR *)"S1",
-                   SERVICE_STACK_SIZE, NULL, tskIDLE_PRIORITY +
-                   PRIORITY_S1, NULL) != pdTRUE)
-    {
-        return(1);
-    }
-
-    UARTprintf("Done!\n");
-    return(0);
-}
-
-uint32_t Service2Init(void) {
-    UARTprintf("Starting Service 2...");
-
-    if(xTaskCreate(Service2, (signed portCHAR *)"S2",
-                   SERVICE_STACK_SIZE, NULL, tskIDLE_PRIORITY +
-                   PRIORITY_S2, NULL) != pdTRUE)
-    {
-        return(1);
-    }
-
-    UARTprintf("Done!\n");
-    return(0);
-}
-
-uint32_t Service3Init(void) {
-    UARTprintf("Starting Service 3...");
-
-    if(xTaskCreate(Service3, (signed portCHAR *)"S3",
-                   SERVICE_STACK_SIZE, NULL, tskIDLE_PRIORITY +
-                   PRIORITY_S3, NULL) != pdTRUE)
-    {
-        return(1);
-    }
-
-    UARTprintf("Done!\n");
-    return(0);
-}
-
-uint32_t Service4Init(void) {
-    UARTprintf("Starting Service 4...");
-
-    if(xTaskCreate(Service4, (signed portCHAR *)"S4",
-                   SERVICE_STACK_SIZE, NULL, tskIDLE_PRIORITY +
-                   PRIORITY_S4, NULL) != pdTRUE)
-    {
-        return(1);
-    }
-
-    UARTprintf("Done!\n");
-    return(0);
-}
-
-uint32_t Service5Init(void) {
-    UARTprintf("Starting Service 5...");
-
-    if(xTaskCreate(Service5, (signed portCHAR *)"S5",
-                   SERVICE_STACK_SIZE, NULL, tskIDLE_PRIORITY +
-                   PRIORITY_S5, NULL) != pdTRUE)
-    {
-        return(1);
-    }
-
-    UARTprintf("Done!\n");
-    return(0);
-}
-
-uint32_t Service6Init(void) {
-    UARTprintf("Starting Service 6...");
-
-    if(xTaskCreate(Service6, (signed portCHAR *)"S6",
-                   SERVICE_STACK_SIZE, NULL, tskIDLE_PRIORITY +
-                   PRIORITY_S6, NULL) != pdTRUE)
-    {
-        return(1);
-    }
-
-    UARTprintf("Done!\n");
-    return(0);
-}
-
-uint32_t Service7Init(void) {
-    UARTprintf("Starting Service 7...");
-
-    if(xTaskCreate(Service7, (signed portCHAR *)"S7",
-                   SERVICE_STACK_SIZE, NULL, tskIDLE_PRIORITY +
-                   PRIORITY_S7, NULL) != pdTRUE)
-    {
-        return(1);
-    }
-
-    UARTprintf("Done!\n");
     return(0);
 }

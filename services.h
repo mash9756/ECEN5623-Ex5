@@ -33,36 +33,14 @@
 #define NUM_OF_SERVICES     (8)
 #define SERVICE_STACK_SIZE  (128)         // Stack size in words
 
-#define RUNTIME_S   (30)
-
-#define SEQ_HZ  (30)
-#define S1_HZ   (3)
-#define S2_HZ   (1)
-#define S3_HZ   (0.5)
-#define S4_HZ   (1)
-#define S5_HZ   (0.5)
-#define S6_HZ   (1)
-#define S7_HZ   (0.1)
-
-/* compiler doesn't like using these as array sizes */
-// #define SEQ_REL_CNT (RUNTIME_S * SEQ_HZ)
-// #define S1_REL_CNT  (RUNTIME_S * S1_HZ)
-// #define S2_REL_CNT  (RUNTIME_S * S2_HZ)
-// #define S3_REL_CNT  (RUNTIME_S * S3_HZ)
-// #define S4_REL_CNT  (RUNTIME_S * S4_HZ)
-// #define S5_REL_CNT  (RUNTIME_S * S5_HZ)
-// #define S6_REL_CNT  (RUNTIME_S * S6_HZ)
-// #define S7_REL_CNT  (RUNTIME_S * S7_HZ)
-
-/* not super clean but didn't want to waste too much time making this prettier */
 #define SEQ_REL_CNT (900)
-#define S1_REL_CNT  (100)
-#define S2_REL_CNT  (35)
-#define S3_REL_CNT  (20)
-#define S4_REL_CNT  (35)
-#define S5_REL_CNT  (20)
-#define S6_REL_CNT  (25)
-#define S7_REL_CNT  (5)
+#define S1_REL_CNT  (SEQ_REL_CNT / 10)
+#define S2_REL_CNT  (SEQ_REL_CNT / 30)
+#define S3_REL_CNT  (SEQ_REL_CNT / 60)
+#define S4_REL_CNT  (SEQ_REL_CNT / 30)
+#define S5_REL_CNT  (SEQ_REL_CNT / 60)
+#define S6_REL_CNT  (SEQ_REL_CNT / 30)
+#define S7_REL_CNT  (SEQ_REL_CNT / 300)
 
 typedef enum {
     SEQ = 0,
@@ -75,12 +53,27 @@ typedef enum {
     S7 = 7
 } SNames_t;
 
-uint32_t Service1Init(void);
-uint32_t Service2Init(void);
-uint32_t Service3Init(void);
-uint32_t Service4Init(void);
-uint32_t Service5Init(void);
-uint32_t Service6Init(void);
-uint32_t Service7Init(void);
+typedef struct 
+{
+    SNames_t id;
+    uint32_t prio;
+
+    bool release;
+    bool abort;
+    uint32_t rel_cnt;
+
+    uint32_t exp_rel_cnt;
+    portTickType *exTimes;
+    portTickType WCET;
+    portTickType minET;
+    
+    xSemaphoreHandle sem;
+} Services_t;
+
+Services_t *xGetServices();
+char *cGetServiceName(SNames_t id);
+uint32_t uiGetRelCnt(SNames_t id);
+uint32_t uiGetPriority(SNames_t id);
+uint32_t uiInitServices(void);
 
 #endif // __SERVICES_H__

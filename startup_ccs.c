@@ -61,7 +61,6 @@ extern void vPortSVCHandler(void);
 extern void xPortSysTickHandler(void);
 
 extern void Timer0IntHandler(void);
-extern void Timer1IntHandler(void);
 
 //*****************************************************************************
 //

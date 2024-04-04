@@ -38,11 +38,6 @@
 static uint8_t ui8IntCnt = 0;
 
 xSemaphoreHandle g_pUARTSemaphore;
-xSemaphoreHandle g_pSx[NUM_OF_SERVICES];
-
-bool abortSx[NUM_OF_SERVICES];
-bool releaseSx[NUM_OF_SERVICES];
-uint32_t SxCnt[NUM_OF_SERVICES];
 
 // The error routine that is called if the driver library encounters an error.
 #ifdef DEBUG
@@ -101,8 +96,6 @@ void ConfigureTimer0(void) {
     // Enable processor interrupts.
     ROM_IntMasterEnable();
 
-    ROM_IntPrioritySet(INT_TIMER0A, 0x01);
-
     // Configure the two 32-bit periodic timers.
     ROM_TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
     ROM_TimerLoadSet(TIMER0_BASE, TIMER_A, TIMER_30HZ);
@@ -112,48 +105,38 @@ void ConfigureTimer0(void) {
     ROM_TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
 }
 
-
-//*****************************************************************************
-// The interrupt handler for the first timer interrupt.
-// Sequencer = RT_MAX	@ 30 Hz
-// Servcie_1 = RT_MAX-1	@ 3 Hz      10
-// Service_2 = RT_MAX-2	@ 1 Hz      30
-// Service_3 = RT_MAX-3	@ 0.5 Hz    60
-// Service_4 = RT_MAX-2	@ 1 Hz      30
-// Service_5 = RT_MAX-3	@ 0.5 Hz    60
-// Service_6 = RT_MAX-2	@ 1 Hz      30
-// Service_7 = RT_MIN	0.1 Hz      300
-//*****************************************************************************
 void Timer0IntHandler(void) {
 /* Clear Timer0 interrupt immediately to prevent repeated triggering */
     ROM_TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
     ui8IntCnt++;
 
+
+    Services_t *servs = xGetServices();
+
 /* set release flag for each service as needed */
     if(ui8IntCnt % 10 == 0) {
-        releaseSx[S1] = true;
+        servs[S1].release = true;
     }
     if(ui8IntCnt % 30 == 0) {
-        releaseSx[S2] = true;
-        releaseSx[S4] = true;
-        releaseSx[S6] = true;
+        servs[S2].release = true;
+        servs[S4].release = true;
+        servs[S6].release = true;
     }
     if(ui8IntCnt % 60 == 0) {
-        releaseSx[S3] = true;
-        releaseSx[S5] = true;
+        servs[S3].release = true;
+        servs[S5].release = true;
     }
     if(ui8IntCnt % 300 == 0) {
-        releaseSx[S7] = true;
-        ui8IntCnt = 0;
+       servs[S7].release = true;
+       ui8IntCnt = 0;
     }
 /* run the sequencer */
-    xSemaphoreGiveFromISR(g_pSx[SEQ], NULL);
+   xSemaphoreGiveFromISR(servs[SEQ].sem, NULL);
 }
 
 int main(void)
 {
-    uint8_t i   = S1;
-    int ret     = 0;
+    int ret = 0;
 
 /* configure clock source to 50MHz using PLL */
     ROM_SysCtlClockSet(SYSCTL_SYSDIV_4 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ | SYSCTL_OSC_MAIN);
@@ -170,16 +153,6 @@ int main(void)
 /* create UART mutex to protect writes */
     g_pUARTSemaphore = xSemaphoreCreateMutex();
 
-/* initialize service control variables and semaphores */
-    for(; i < NUM_OF_SERVICES ; i++) {
-        abortSx[i]      = false;
-        releaseSx[i]    = false;
-        SxCnt[i]        = 0;
-        
-        g_pSx[i] = xSemaphoreCreateMutex();
-        xSemaphoreTake(g_pSx[i], portMAX_DELAY);
-    }
-
 /* create sequencer */
     ret = SequencerInit();
     if(ret) {
@@ -187,55 +160,11 @@ int main(void)
         return -1;
     }
 
-/* create each service */
-    ret = Service1Init();
-    if(ret)
-    {
-        UARTprintf("Failed to create Service 1: %d\n", ret);
+    ret = uiInitServices();
+    if(ret) {
+        UARTprintf("Failed to create services: %d\n", ret);
         return -1;
     }
-
-    ret = Service2Init();
-    if(ret)
-    {
-        UARTprintf("Failed to create Service 2: %d\n", ret);
-        return -1;
-    }
-
-    ret = Service3Init();
-   if(ret)
-   {
-       UARTprintf("Failed to create Service 3: %d\n", ret);
-       return -1;
-   }
-
-    ret = Service4Init();
-   if(ret)
-   {
-       UARTprintf("Failed to create Service 4: %d\n", ret);
-       return -1;
-   }
-
-    ret = Service5Init();
-   if(ret)
-   {
-       UARTprintf("Failed to create Service 5: %d\n", ret);
-       return -1;
-   }
-
-    ret = Service6Init();
-   if(ret)
-   {
-       UARTprintf("Failed to create Service 6: %d\n", ret);
-       return -1;
-   }
-
-    ret = Service7Init();
-   if(ret)
-   {
-       UARTprintf("Failed to create Service 7: %d\n", ret);
-       return -1;
-   }
 
 /* enable (start) the configured timer */
     ROM_TimerEnable(TIMER0_BASE, TIMER_A);
