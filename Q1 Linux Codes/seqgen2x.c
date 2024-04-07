@@ -2,7 +2,7 @@
 /*                                                                            */
 /*   seqgen2x.c                                                               */
 // Sam Siewert, December 2017
-//
+// Modified by: Hardik Minocha
 // Sequencer Generic @ 2x Rate for 10Hz Capture
 //
 // The purpose of this code is to provide an example for how to best

@@ -1,7 +1,7 @@
 /* ========================================================================== */
 /*                                                                            */
 // Sam Siewert, December 2017
-//
+// Modified by: Hardik Minocha
 // Sequencer Generic
 //
 // The purpose of this code is to provide an example for how to best
