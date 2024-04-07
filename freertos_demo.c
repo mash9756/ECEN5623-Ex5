@@ -29,17 +29,27 @@
 #include "services.h"
 #include "sequencer.h"
 
+/* 1ms load time = SYS_CLK / 1000, SYS_CLK is ticks/sec */
 #define SYS_CLK         (50000000)
 /* 30Hz timer has a period of ~33ms (1 / 30 = .033s) */
-#define TIMER_30HZ      (SYS_CLK / 1000 * 33)
+#define TIMER_30HZ      ((SYS_CLK / 1000) * 33.33)
 /* 3000Hz timer has a period of ~3.3ms (1 / 300 = .0033s) */
-#define TIMER_300HZ     (SYS_CLK / 10000 * 33)
+#define TIMER_300HZ     ((SYS_CLK / 1000) * 333.33)
 /* 3000Hz timer has a period of ~330us (1 / 3000 = .00033s) */
-#define TIMER_3000HZ    (SYS_CLK / 100000 * 33)
+#define TIMER_3000HZ    ((SYS_CLK / 1000) / 3 )
 
-static uint8_t ui8IntCnt = 0;
+/* test frequencies for verification */
+/* 500Hz timer has a period of ~1.1ms (1 / 1000 = .0011s) */
+#define TIMER_500HZ     ((SYS_CLK / 1000) * 2)
+/* 700Hz timer has a period of ~1.1ms (1 / 1000 = .0011s) */
+#define TIMER_700HZ     ((SYS_CLK / 1000) * 1.4)
+/* 900Hz timer has a period of ~1.1ms (1 / 1000 = .0011s) */
+#define TIMER_900HZ     ((SYS_CLK / 1000) * 1.1)
+/* 1000Hz timer has a period of ~1ms (1 / 1000 = .001s) */
+#define TIMER_1000HZ    ((SYS_CLK / 1000) * 1)
 
-xSemaphoreHandle g_pUARTSemaphore;
+static uint32_t ui8IntCnt = 0;
+Services_t *servs;
 
 // The error routine that is called if the driver library encounters an error.
 #ifdef DEBUG
@@ -110,9 +120,8 @@ void ConfigureTimer0(void) {
 void Timer0IntHandler(void) {
 /* Clear Timer0 interrupt immediately to prevent repeated triggering */
     ROM_TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+    ROM_IntDisable(INT_TIMER0A);
     ui8IntCnt++;
-
-    Services_t *servs = xGetServices();
 
 /* set release flag for each service as needed */
     if(ui8IntCnt % 10 == 0) {
@@ -128,16 +137,18 @@ void Timer0IntHandler(void) {
         servs[S5].release = true;
     }
     if(ui8IntCnt % 300 == 0) {
-       servs[S7].release = true;
-       ui8IntCnt = 0;
+        servs[S7].release = true;
+        ui8IntCnt = 0;
     }
-/* run the sequencer */
-   xSemaphoreGiveFromISR(servs[SEQ].sem, NULL);
+
+    ROM_IntEnable(INT_TIMER0A);
+    xSemaphoreGiveFromISR(servs[SEQ].sem, NULL);
 }
 
 int main(void)
 {
     int ret = 0;
+    servs = xGetServices();
 
 /* configure clock source to 50MHz using PLL */
     ROM_SysCtlClockSet(SYSCTL_SYSDIV_4 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ | SYSCTL_OSC_MAIN);
@@ -146,13 +157,11 @@ int main(void)
 /* Initialize hardware UART0 and configure it for 115,200, 8-N-1 operation. */
     ConfigureUART0();
 
-/* Initialize hardware Timer0 peripheral and interrupts */
-    ConfigureTimer0();
-
+/* print startup message now that we have a working UART */
     UARTprintf("\n\n--- ECEN5623 Exercise 5 ---\n");
 
-/* create UART mutex to protect writes */
-    g_pUARTSemaphore = xSemaphoreCreateMutex();
+/* Initialize hardware Timer0 peripheral and interrupts */
+    ConfigureTimer0();
 
 /* create sequencer */
     ret = SequencerInit();
@@ -169,7 +178,7 @@ int main(void)
 
 /* enable (start) the configured timer */
     ROM_TimerEnable(TIMER0_BASE, TIMER_A);
-
+    
 /* start FreeRTOS scheduler, should never return */
     vTaskStartScheduler();
 

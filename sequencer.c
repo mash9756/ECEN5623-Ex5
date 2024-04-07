@@ -8,8 +8,6 @@
 #include "sequencer.h"
 #include "services.h"
 
-extern xSemaphoreHandle g_pUARTSemaphore;
-
 void calcWCET() {
     uint8_t i = S1;
     uint8_t j = 0;
@@ -33,26 +31,22 @@ static void vSequencer(void *threadp)
 {
     Services_t *services = xGetServices();
     uint8_t i = S1;
-    xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-    UARTprintf("Execution Status:\n");
-    xSemaphoreGive(g_pUARTSemaphore);    
-
+    UARTprintf("Execution Status:\n"); 
+    
     while(!services[SEQ].abort) {
         xSemaphoreTake(services[SEQ].sem, portMAX_DELAY);
-        
+       
         if(services[SEQ].rel_cnt % 10 == 0){
-            xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
             UARTprintf("-");
-            xSemaphoreGive(g_pUARTSemaphore);
         }
-
+    
         for(i = S1; i < NUM_OF_SERVICES; i++) {
             if(services[i].release) {
                 xSemaphoreGive(services[i].sem);
                 services[i].release = false;
             }
         }
-        
+         
         services[SEQ].rel_cnt++;
         if (services[SEQ].rel_cnt >= SEQ_REL_CNT) {
             ROM_IntDisable(INT_TIMER0A);
@@ -64,14 +58,8 @@ static void vSequencer(void *threadp)
 
     calcWCET();
     for (i = S1; i < NUM_OF_SERVICES; i++) {
-        xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-        UARTprintf("\nS%d Release Count: %d| WCET: %dms | minET: %dms", i, services[i].rel_cnt, services[i].WCET, services[i].minET);
-        xSemaphoreGive(g_pUARTSemaphore);
+        UARTprintf("\nS%d Release Count: %d| WCET: %dus | minET: %dus", i, services[i].rel_cnt, services[i].WCET, services[i].minET);
     }
-
-    xSemaphoreTake(g_pUARTSemaphore, portMAX_DELAY);
-    UARTprintf("\nDone!\n");
-    xSemaphoreGive(g_pUARTSemaphore);   
 }
 
 uint32_t SequencerInit(void) {
@@ -91,7 +79,7 @@ uint32_t SequencerInit(void) {
     services[SEQ].exp_rel_cnt = uiGetRelCnt(SEQ);
     services[SEQ].exTimes = NULL;
 
-    services[SEQ].sem = xSemaphoreCreateMutex();
+    vSemaphoreCreateBinary(services[SEQ].sem);
     xSemaphoreTake(services[SEQ].sem, portMAX_DELAY);
 
     ret = xTaskCreate(  vSequencer, 

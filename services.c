@@ -108,7 +108,7 @@ static void vServFunc(void *pvParameters) {
         xSemaphoreTake(services[servID].sem, portMAX_DELAY);
 
         start = xTaskGetTickCount();
-        fib_test(FIB_ITERATIONS);   
+        fib_test(FIB3000HZ_ITERATIONS);
         stop = xTaskGetTickCount();
 
         services[servID].exTimes[services[servID].rel_cnt] = stop - start;
@@ -135,7 +135,7 @@ uint32_t uiInitServices(void) {
         services[i].exp_rel_cnt = uiGetRelCnt((SNames_t)i);
         services[i].exTimes = xExecutionTimes[i];
 
-        services[i].sem = xSemaphoreCreateMutex();
+        vSemaphoreCreateBinary(services[i].sem);
         xSemaphoreTake(services[i].sem, portMAX_DELAY);
 
         ret = xTaskCreate(  vServFunc, 

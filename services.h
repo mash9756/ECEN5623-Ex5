@@ -34,7 +34,7 @@
 #define NUM_OF_SERVICES     (8)
 #define SERVICE_STACK_SIZE  (128)         // Stack size in words
 
-#define SEQ_REL_CNT (900)
+#define SEQ_REL_CNT (350)
 #define S1_REL_CNT  (SEQ_REL_CNT / 10)
 #define S2_REL_CNT  (SEQ_REL_CNT / 30)
 #define S3_REL_CNT  (SEQ_REL_CNT / 60)
