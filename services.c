@@ -108,7 +108,12 @@ static void vServFunc(void *pvParameters) {
         xSemaphoreTake(services[servID].sem, portMAX_DELAY);
 
         start = xTaskGetTickCount();
-        fib_test(FIB3000HZ_ITERATIONS);
+        if(SEQ_30HZ) {
+            fib_test(FIB30HZ_SEQCNT, FIB30HZ_ITERCNT);
+        }
+        else {
+            fib_test(FIB3000HZ_SEQCNT, FIB3000HZ_ITERCNT);
+        }
         stop = xTaskGetTickCount();
 
         services[servID].exTimes[services[servID].rel_cnt] = stop - start;
@@ -122,7 +127,7 @@ uint32_t uiInitServices(void) {
     int ret     = 0;
 
     for(; i < NUM_OF_SERVICES ; i++) {
-        UARTprintf("Starting Service %d...", i);
+        UARTprintf("\nStarting Service %d...", i);
 
         services[i].id      = (SNames_t)i;
         services[i].prio    = uiGetPriority((SNames_t)i);
@@ -148,7 +153,7 @@ uint32_t uiInitServices(void) {
             return(1);
         }
 
-        UARTprintf("Done!\n");
+        UARTprintf("Done!");
     }
     return(0);
 }

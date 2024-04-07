@@ -38,17 +38,16 @@
 /* 3000Hz timer has a period of ~330us (1 / 3000 = .00033s) */
 #define TIMER_3000HZ    ((SYS_CLK / 1000) / 3 )
 
-/* test frequencies for verification */
-/* 500Hz timer has a period of ~1.1ms (1 / 1000 = .0011s) */
+/* 500Hz timer has a period of ~2ms (1 / 500 = .0020s) */
 #define TIMER_500HZ     ((SYS_CLK / 1000) * 2)
-/* 700Hz timer has a period of ~1.1ms (1 / 1000 = .0011s) */
+/* 700Hz timer has a period of ~1.4ms (1 / 700 = .0014s) */
 #define TIMER_700HZ     ((SYS_CLK / 1000) * 1.4)
-/* 900Hz timer has a period of ~1.1ms (1 / 1000 = .0011s) */
+/* 900Hz timer has a period of ~1.1ms (1 / 900 = .0011s) */
 #define TIMER_900HZ     ((SYS_CLK / 1000) * 1.1)
-/* 1000Hz timer has a period of ~1ms (1 / 1000 = .001s) */
+/* 1000Hz timer has a period of ~1ms (1 / 1000 = .0010s) */
 #define TIMER_1000HZ    ((SYS_CLK / 1000) * 1)
 
-static uint32_t ui8IntCnt = 0;
+static uint8_t ui8IntCnt = 0;
 Services_t *servs;
 
 // The error routine that is called if the driver library encounters an error.
@@ -110,7 +109,13 @@ void ConfigureTimer0(void) {
 
     // Configure the two 32-bit periodic timers.
     ROM_TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
-    ROM_TimerLoadSet(TIMER0_BASE, TIMER_A, TIMER_30HZ);
+
+    if(SEQ_30HZ) {
+        ROM_TimerLoadSet(TIMER0_BASE, TIMER_A, TIMER_30HZ);
+    }
+    else {
+        ROM_TimerLoadSet(TIMER0_BASE, TIMER_A, TIMER_3000HZ);
+    }
 
     // Setup the interrupts for the timer timeouts.
     ROM_IntEnable(INT_TIMER0A);
@@ -159,6 +164,13 @@ int main(void)
 
 /* print startup message now that we have a working UART */
     UARTprintf("\n\n--- ECEN5623 Exercise 5 ---\n");
+    if(SEQ_30HZ) {
+        UARTprintf("\n      Timer Frequency: 30Hz");
+    }
+    else{
+        UARTprintf("\n      Timer Frequency: 3000Hz");
+        UARTprintf("\n      *** WARNING: This WILL NOT complete successfully, CPU cannot schedule all services.");
+    }
 
 /* Initialize hardware Timer0 peripheral and interrupts */
     ConfigureTimer0();

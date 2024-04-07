@@ -30,11 +30,15 @@
 #include "task.h"
 #include "semphr.h"
 
+/* define flag for 30Hz / 3000Hz */
+#define SEQ_30HZ        (1)
+
 /* Total services, sequencer + 7 services */
 #define NUM_OF_SERVICES     (8)
 #define SERVICE_STACK_SIZE  (128)         // Stack size in words
 
-#define SEQ_REL_CNT (350)
+/* Calculated service release counts based on sequencer iterations */
+#define SEQ_REL_CNT (900)
 #define S1_REL_CNT  (SEQ_REL_CNT / 10)
 #define S2_REL_CNT  (SEQ_REL_CNT / 30)
 #define S3_REL_CNT  (SEQ_REL_CNT / 60)
@@ -58,16 +62,13 @@ typedef struct
 {
     SNames_t id;
     uint32_t prio;
-
     bool release;
     bool abort;
     uint32_t rel_cnt;
-
     uint32_t exp_rel_cnt;
     portTickType *exTimes;
     portTickType WCET;
     portTickType minET;
-    
     xSemaphoreHandle sem;
 } Services_t;
 

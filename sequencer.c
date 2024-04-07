@@ -31,7 +31,7 @@ static void vSequencer(void *threadp)
 {
     Services_t *services = xGetServices();
     uint8_t i = S1;
-    UARTprintf("Execution Status:\n"); 
+    UARTprintf("\nExecution Status:\n"); 
     
     while(!services[SEQ].abort) {
         xSemaphoreTake(services[SEQ].sem, portMAX_DELAY);
@@ -46,7 +46,7 @@ static void vSequencer(void *threadp)
                 services[i].release = false;
             }
         }
-         
+        
         services[SEQ].rel_cnt++;
         if (services[SEQ].rel_cnt >= SEQ_REL_CNT) {
             ROM_IntDisable(INT_TIMER0A);
@@ -58,12 +58,12 @@ static void vSequencer(void *threadp)
 
     calcWCET();
     for (i = S1; i < NUM_OF_SERVICES; i++) {
-        UARTprintf("\nS%d Release Count: %d| WCET: %dus | minET: %dus", i, services[i].rel_cnt, services[i].WCET, services[i].minET);
+        UARTprintf("\nS%d Release Count: %d| WCET: %dms | minET: %dms", i, services[i].rel_cnt, services[i].WCET, services[i].minET);
     }
 }
 
 uint32_t SequencerInit(void) {
-    UARTprintf("Starting Sequencer...");
+    UARTprintf("\n\nStarting Sequencer...");
     int ret = 0;
     Services_t *services = xGetServices();
 
@@ -92,6 +92,6 @@ uint32_t SequencerInit(void) {
         return(1);
     }
 
-    UARTprintf("Done!\n");
+    UARTprintf("Done!");
     return(0);
 }
